@@ -1,6 +1,6 @@
-﻿using Snow.Refrigerant.Models;
+﻿using Snow.Components.Interfaces;
+using Snow.Refrigerant.Models;
 using Snow.Refrigerant.Table;
-using System.ComponentModel;
 
 public class ExpansionValve : IComponent
 {
@@ -13,14 +13,17 @@ public class ExpansionValve : IComponent
 
     public string Name => "Válvula de Expansión";
 
-    public ThermoState Inlet { get; private set; }    // H3
-    public ThermoState Outlet { get; private set; }   // H4
+    public ThermoState Inlet { get; private set; }   
+    public ThermoState Outlet { get; private set; }
 
-    // 🔹 Método principal: expansión isentálpica
+    public double LastHeat => throw new NotImplementedException();
+
+    public double LastWork => throw new NotImplementedException();
+
     public ThermoState Process(ThermoState inletState)
     {
         Inlet = inletState;
-        Outlet = props.H4; // Estado después de la válvula (saturado líquido a baja presión)
+        Outlet = props.H4; 
         return Outlet;
     }
 }

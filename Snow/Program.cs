@@ -8,7 +8,7 @@ namespace Snow
     {
         public static void Main(string[] args)
         {
-            Console.WriteLine("=== SIMULADOR CICLO DE REFRIGERACIÓN ===\n");
+            Console.WriteLine("=== SIMULADOR CICLO DE REFRIGERACIÓN (con componentes) ===\n");
 
             Console.Write("Ingrese el nombre del refrigerante (ej: R134a): ");
             string refrigerant = Console.ReadLine()?.Trim() ?? "R134a";
@@ -21,18 +21,33 @@ namespace Snow
 
             try
             {
+                // 🔹 Cargar propiedades termodinámicas
                 var table = new RefrigeranteTable(refrigerant, tEvap, tCond);
 
-                Console.WriteLine("\n=== RESULTADOS DEL CICLO ===\n");
-                PrintState("H1 - Salida del Evaporador / Entrada al Compresor", table.H1);
-                PrintState("H2 - Salida del Compresor", table.H2);
-                PrintState("H3 - Salida del Condensador", table.H3);
-                PrintState("H4 - Salida de la Válvula de Expansión", table.H4);
+                // 🔹 Crear componentes
+                var evaporator = new BasicEvaporator(table);
+                var compressor = new Compressor(table);
+                var condenser = new BasicCondenser(table);
+                var valve = new ExpansionValve(table);
 
-                double qEvaporador = table.H1.Enthalpy - table.H4.Enthalpy;
-                double qCondensador = table.H2.Enthalpy - table.H3.Enthalpy;
-                double trabajoCompresor = table.H2.Enthalpy - table.H1.Enthalpy;
+                // 🔹 Flujo del refrigerante a través del ciclo ideal
+                var h1 = evaporator.Process(null);   // Saturado vapor
+                var h2 = compressor.Process(h1);     // Vapor recalentado (isentropico)
+                var h3 = condenser.Process(h2);      // Líquido saturado
+                var h4 = valve.Process(h3);          // Mezcla bifásica (expansión)
+
+                // 🔹 Cálculos de balance energético
+                double qEvaporador = h1.Enthalpy - h4.Enthalpy;
+                double qCondensador = h2.Enthalpy - h3.Enthalpy;
+                double trabajoCompresor = h2.Enthalpy - h1.Enthalpy;
                 double cop = qEvaporador / trabajoCompresor;
+
+                // 🔹 Mostrar resultados
+                Console.WriteLine("\n=== RESULTADOS DEL CICLO ===\n");
+                PrintState("H1 - Salida del Evaporador / Entrada al Compresor", h1);
+                PrintState("H2 - Salida del Compresor", h2);
+                PrintState("H3 - Salida del Condensador", h3);
+                PrintState("H4 - Salida de la Válvula de Expansión", h4);
 
                 Console.WriteLine("\n=== BALANCE ENERGÉTICO ===");
                 Console.WriteLine($"Trabajo del compresor (BTU/lbm): {trabajoCompresor:F2}");
